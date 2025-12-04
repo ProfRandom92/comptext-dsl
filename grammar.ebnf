@@ -1,0 +1,68 @@
+(* CompText DSL - Formal Grammar Specification *)
+(* Version: 1.0.0 *)
+(* Date: 2025-12-04 *)
+
+(* ========== Top-Level Structure ========== *)
+
+command         = module_call | simple_identifier ;
+module_call     = module_path , [ parameters ] ;
+module_path     = identifier , { "." , identifier } ;
+
+(* ========== Identifiers ========== *)
+
+identifier      = letter , { letter | digit | "-" | "_" } ;
+simple_identifier = letter , { letter | digit } ;
+
+(* ========== Parameters ========== *)
+
+parameters      = "(" , [ parameter_list ] , ")" ;
+parameter_list  = parameter , { "," , parameter } ;
+parameter       = key , "=" , value ;
+
+key             = identifier ;
+value           = string_value 
+                | number_value 
+                | boolean_value 
+                | array_value 
+                | identifier ;
+
+(* ========== Value Types ========== *)
+
+string_value    = '"' , { string_char } , '"' 
+                | "'" , { string_char } , "'" ;
+string_char     = ? any Unicode character except quotes ? ;
+
+number_value    = [ "-" ] , digit , { digit } , [ "." , digit , { digit } ] ;
+boolean_value   = "true" | "false" ;
+array_value     = value , { "+" , value } ;
+
+(* ========== Primitives ========== *)
+
+letter          = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J"
+                | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T"
+                | "U" | "V" | "W" | "X" | "Y" | "Z"
+                | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j"
+                | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t"
+                | "u" | "v" | "w" | "x" | "y" | "z" ;
+
+digit           = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+(* ========== Whitespace (ignored) ========== *)
+
+whitespace      = " " | "\t" | "\n" | "\r" ;
+
+(* ========== Examples ========== *)
+
+(* 
+  Valid Commands:
+    doc.auth-methods
+    api.search(query="test", limit=10)
+    mod.category(tags=ai+ml+nlp, env=prod)
+    simple_command
+
+  Invalid Commands:
+    .missing_module
+    doc..double_dot
+    mod(key=)
+    123_starts_with_number
+*)
