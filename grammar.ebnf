@@ -1,38 +1,99 @@
 (* CompText Domain-Specific Language - Formal Grammar *)
-(* Version: 1.0.0 *)
+(* EBNF Specification v1.0 *)
 
-(* Top-level constructs *)
-program          = { command | module_import };
+(* ==================== TOP-LEVEL STRUCTURE ==================== *)
 
-(* Commands *)
-command          = identifier, [ parameters ], ";";
+program          = { statement };
+
+statement        = command
+                 | module_import
+                 | variable_assignment
+                 | comment;
+
+(* ==================== COMMANDS ==================== *)
+
+command          = identifier, [ parameters ], [ options ];
+
 identifier       = letter, { letter | digit | "-" | "_" };
 
-(* Parameters *)
 parameters       = "(", [ param_list ], ")";
+
 param_list       = param, { ",", param };
-param            = key, "=", value;
-key              = identifier;
-value            = string | number | boolean | array | object;
 
-(* Data types *)
-string           = '"', { character }, '"';
+param            = key_value_pair | positional_value;
+
+key_value_pair   = identifier, "=", value;
+
+positional_value = value;
+
+(* ==================== VALUES ==================== *)
+
+value            = string
+                 | number
+                 | boolean
+                 | array
+                 | object
+                 | reference;
+
+string           = '"', { string_char }, '"'
+                 | "'", { string_char }, "'";
+
+string_char      = ? any character except quote ?
+                 | escape_sequence;
+
+escape_sequence  = "\", ( "\"" | "\'" | "\n" | "\t" | "\r" );
+
 number           = [ "-" ], digit, { digit }, [ ".", digit, { digit } ];
+
 boolean          = "true" | "false";
+
 array            = "[", [ value_list ], "]";
+
 value_list       = value, { ",", value };
+
 object           = "{", [ key_value_list ], "}";
-key_value_list   = key, ":", value, { ",", key, ":", value };
 
-(* Module system *)
-module_import    = "import", string, [ "as", identifier ], ";";
+key_value_list   = key_value_pair, { ",", key_value_pair };
 
-(* Basic elements *)
-letter           = "A" | "B" | ... | "Z" | "a" | "b" | ... | "z";
+reference        = "$", identifier;
+
+(* ==================== OPTIONS ==================== *)
+
+options          = "--", option_list;
+
+option_list      = option, { " ", option };
+
+option           = flag_option | value_option;
+
+flag_option      = identifier;
+
+value_option     = identifier, "=", value;
+
+(* ==================== MODULES ==================== *)
+
+module_import    = "import", string, [ "as", identifier ];
+
+(* ==================== VARIABLES ==================== *)
+
+variable_assignment = identifier, ":=", value;
+
+(* ==================== COMMENTS ==================== *)
+
+comment          = line_comment | block_comment;
+
+line_comment     = "#", { ? any character except newline ? };
+
+block_comment    = "/*", { ? any character ? }, "*/";
+
+(* ==================== BASIC TOKENS ==================== *)
+
+letter           = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J"
+                 | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T"
+                 | "U" | "V" | "W" | "X" | "Y" | "Z"
+                 | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j"
+                 | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t"
+                 | "u" | "v" | "w" | "x" | "y" | "z";
+
 digit            = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
-character        = letter | digit | special_char;
-special_char     = " " | "!" | "@" | "#" | "$" | "%" | "&" | "*" | "(" | ")" | ... ;
 
-(* Comments *)
-comment          = "//", { character }, newline
-                 | "/*", { character }, "*/";
+(* ==================== END OF GRAMMAR ==================== *)
