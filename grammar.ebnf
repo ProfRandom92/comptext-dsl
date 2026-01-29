@@ -1,11 +1,14 @@
 (* CompText Domain-Specific Language - Formal Grammar *)
-(* EBNF Specification v1.0 *)
+(* EBNF Specification v1.1 - MCP & Codex Aligned *)
 
 (* ==================== TOP-LEVEL STRUCTURE ==================== *)
 
 program          = { statement };
 
 statement        = command
+                 | skill_invocation
+                 | tool_definition
+                 | task_definition
                  | module_import
                  | variable_assignment
                  | comment;
@@ -15,6 +18,41 @@ statement        = command
 command          = identifier, [ parameters ], [ options ];
 
 identifier       = letter, { letter | digit | "-" | "_" };
+
+(* ==================== CODEX SKILLS (Agent Skills) ==================== *)
+(* Syntax: $skill-name or $skill-name(params) *)
+
+skill_invocation = "$", identifier, [ parameters ];
+
+(* ==================== MCP TOOL DEFINITIONS ==================== *)
+(* JSON-RPC 2.0 compatible tool definitions *)
+
+tool_definition  = "tool", identifier, "{", tool_body, "}";
+
+tool_body        = tool_name, tool_description, [ tool_input_schema ];
+
+tool_name        = "name", ":", string;
+
+tool_description = "description", ":", string;
+
+tool_input_schema = "inputSchema", ":", json_schema;
+
+json_schema      = "{", "type", ":", string, ",", "properties", ":", object, [ ",", "required", ":", array ], "}";
+
+(* ==================== MCP TASKS (Async Operations) ==================== *)
+(* Tasks primitive for long-running operations *)
+
+task_definition  = "task", identifier, "{", task_body, "}";
+
+task_body        = task_name, [ task_description ], [ task_timeout ], task_handler;
+
+task_name        = "name", ":", string;
+
+task_description = "description", ":", string;
+
+task_timeout     = "timeout", ":", number;
+
+task_handler     = "handler", ":", ( identifier | string );
 
 parameters       = "(", [ param_list ], ")";
 
@@ -73,6 +111,15 @@ value_option     = identifier, "=", value;
 
 module_import    = "import", string, [ "as", identifier ];
 
+(* ==================== MCP RESOURCES ==================== *)
+(* Resource URIs for MCP protocol *)
+
+resource_uri     = "resource", ":", string;
+
+resource_ref     = "@", identifier, [ "/", path_segment, { "/", path_segment } ];
+
+path_segment     = identifier | string;
+
 (* ==================== VARIABLES ==================== *)
 
 variable_assignment = identifier, ":=", value;
@@ -96,4 +143,22 @@ letter           = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J"
 
 digit            = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 
+(* ==================== PROTOCOL MESSAGES (JSON-RPC 2.0) ==================== *)
+(* MCP protocol message structure *)
+
+jsonrpc_message  = "{", jsonrpc_version, ",", ( request | response | notification ), "}";
+
+jsonrpc_version  = '"jsonrpc"', ":", '"2.0"';
+
+request          = '"method"', ":", string, ",", '"id"', ":", ( number | string ), [ ",", '"params"', ":", ( object | array ) ];
+
+response         = '"id"', ":", ( number | string ), ",", ( result | error );
+
+result           = '"result"', ":", value;
+
+error            = '"error"', ":", "{", '"code"', ":", number, ",", '"message"', ":", string, [ ",", '"data"', ":", value ], "}";
+
+notification     = '"method"', ":", string, [ ",", '"params"', ":", ( object | array ) ];
+
 (* ==================== END OF GRAMMAR ==================== *)
+(* Version: 1.1.0 - MCP November 2025 & Codex Skills Aligned *)
